@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>予約カレンダー</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+        <style>
+        /* カレンダーのはみ出し防止 */
+        #calendar {
+            overflow: visible;
+        }
+        .fc-daygrid-event {
+            white-space: normal !important;  /* イベントタイトルを折り返す */
+        }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 1000px; margin: 40px auto;">
+    <h1 style="font-size: 24px;">予約カレンダー</h1>
+    <div id="calendar"></div>
+    <p><a href="{{ url_for('index') }}">← 予約一覧へ戻る</a></p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ja',
+        events: '/api/reservations',
+        dayMaxEventRows: false, 
+        contentHeight: 'auto',        // 高さ自動調整（必要に応じて）
+        expandRows: true
+    });
+    calendar.render();
+});
+</script>
+
+</body>
+</html>

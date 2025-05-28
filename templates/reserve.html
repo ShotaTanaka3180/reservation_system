@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>☆予約システム☆</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title">予約システム</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div>
+                    {% for category, message in messages %}
+                        <div class="notification is-{{ 'danger' if category == 'error' else 'success' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('reserve') }}" class="box">
+            <div class="field">
+                <label class="label">担当者</label>
+                <div class="control">
+                    <input class="input" type="text" name="applicant" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">部屋</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="room" required>
+                            {% for room in rooms %}
+                                <option>{{ room }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">日付</label>
+                <div class="control">
+                    <input class="input" type="date" name="date" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">時間帯</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="time_slot" required>
+                            {% for slot in time_slots %}
+                                <option>{{ slot }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">会議名</label>
+                <div class="control">
+                    <input class="input" type="text" name="meeting_name" required>
+                </div>
+            </div>
+
+            <div class="control">
+                <button class="button is-link" type="submit">予約する</button>
+                <a href="{{ url_for('calendar_page') }}" class="button is-light">カレンダーを見る</a>
+            </div>
+        </form>
+
+        <h2 class="title is-4">予約一覧</h2>
+        <table class="table is-striped is-fullwidth">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>担当者</th>
+                    <th>部屋</th>
+                    <th>日付</th>
+                    <th>時間帯</th>
+                    <th>会議名</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reservations %}
+                <tr>
+                    <td>{{ loop.index0 }}</td>
+                    <td>{{ r.applicant }}</td>
+                    <td>{{ r.room }}</td>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.time_slot }}</td>
+                    <td>{{ r.meeting_name }}</td>
+                    <td>
+                        <form action="{{ url_for('cancel', reservation_id=r.id) }}" method="post">
+                            <button class="button is-danger is-small" type="submit">キャンセル</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+</body>
+</html>
