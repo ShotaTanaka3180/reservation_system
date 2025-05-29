@@ -1,11 +1,5 @@
 from dotenv import load_dotenv
 import os
-
-load_dotenv()
-print("✅ DATABASE_URL:", os.environ.get("DATABASE_URL"))
-
-from dotenv import load_dotenv
-import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
@@ -16,10 +10,20 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "secret_key_for_flash"
 
-# .env読み込み（必ずUTF-8で保存した.envを用意すること）
+# .envファイルから環境変数読み込み（UTF-8で保存した.envを用意してください）
 load_dotenv()
 
-# Discord Webhook URL（環境変数 or デフォルト値）
+# 環境変数からDATABASE_URLを取得し、strip()で余計な空白・改行を除去
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip()
+
+print("DATABASE_URL (repr):", repr(DATABASE_URL))  # 環境変数の内容を不可視文字込みでチェック
+
+if DATABASE_URL is None or DATABASE_URL == "":
+    raise RuntimeError("DATABASE_URLが設定されていません。")
+
+# Discord Webhook URLs（環境変数がなければデフォルト値）
 DISCORD_WEBHOOK_URL_NOTIFY = os.environ.get(
     "DISCORD_WEBHOOK_URL_NOTIFY",
     "https://discord.com/api/webhooks/1377180247119757332/707LUp9xyNCEwLmNdV45ynylLJIldIJol7oMtIlMVPLb2GR7Lma_H1Nwsi0qgna6uMzb"
@@ -51,14 +55,9 @@ ROOM_COLOR = {
 
 lock = threading.Lock()
 
-# 環境変数からDATABASE_URLを取得（必ず文字列として扱う）
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL is None:
-    raise RuntimeError("DATABASE_URLが設定されていません。")
-
 def get_db_connection():
-    # psycopg2.connectに文字列をそのまま渡す
-    return psycopg2.connect(DATABASE_URL)
+    # psycopg2.connectに文字列をそのまま渡す（dsnパラメータ名を明示）
+    return psycopg2.connect(dsn=DATABASE_URL)
 
 def load_reservations():
     conn = get_db_connection()
