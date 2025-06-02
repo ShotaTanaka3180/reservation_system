@@ -1,5 +1,3 @@
-# notify_worker.py
-
 import os
 import psycopg2
 import psycopg2.extras
@@ -7,9 +5,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 import requests
 
-# 環境変数の読み込み（Renderでは load_dotenv はなくても OK だがローカル実行では必要）
+# 環境変数の読み込み（Renderでは不要だがローカルでは必要）
 load_dotenv()
 
+# 環境変数から取得（.env または Renderダッシュボードで設定）
 DATABASE_URL = os.environ.get("postgresql://reservation_db_xhwh_user:54vyztYt01jG1ukUzJ2csLxRiCk20qzS@dpg-d0rsg9k9c44c73chs6p0-a.oregon-postgres.render.com:5432/reservation_db_xhwh")
 DISCORD_WEBHOOK_URL_REMIND = os.environ.get("https://discord.com/api/webhooks/1376787046361862204/zxoxntBDR05dyzMfYcquk9NUY6JtXt0WO3PbyQ_9sCX5euINOALxSLcExUYYE558Jwk1")
 
