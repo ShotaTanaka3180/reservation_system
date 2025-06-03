@@ -10,23 +10,17 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "secret_key_for_flash"
 
-# .envファイルから環境変数読み込み（UTF-8で保存した.envを用意してください）
+# 環境変数読み込み
 load_dotenv()
-
-# 環境変数からDATABASE_URLを取得し、strip()で余計な空白・改行を除去
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASE_URL = DATABASE_URL.strip()
-
-print("DATABASE_URL (repr):", repr(DATABASE_URL))  # 環境変数の内容を不可視文字込みでチェック
-
 if DATABASE_URL is None or DATABASE_URL == "":
     raise RuntimeError("DATABASE_URLが設定されていません。")
 
-# Discord Webhook URLs（環境変数がなければデフォルト値）
 DISCORD_WEBHOOK_URL_NOTIFY = os.environ.get(
     "DISCORD_WEBHOOK_URL_NOTIFY",
-    "https://discord.com/api/webhooks/1377180247119757332/707LUp9xyNCEwLmNdV45ynylLJIldIJol7oMtIlMVPLb2GR7Lma_H1Nwsi0qgna6uMzb"
+    "https://discord.com/api/webhooks/1377180250873663588/f3iHee1EiRybV0XITYDNsc4dui-PpTZLaX9pghPHKg5tnI9iSds53JrMMCmR9mMUenIb"
 )
 DISCORD_WEBHOOK_URL_REMIND = os.environ.get(
     "DISCORD_WEBHOOK_URL_REMIND",
@@ -34,14 +28,14 @@ DISCORD_WEBHOOK_URL_REMIND = os.environ.get(
 )
 
 TIME_SLOT_TO_TIME = {
-    "1限": (9, 00),
+    "1限": (9, 0),
     "2限": (10, 40),
     "昼休み": (12, 20),
-    "3限": (13, 00),
+    "3限": (13, 0),
     "4限": (14, 40),
     "5限": (16, 20),
-    "6限": (18, 00),
-    "夜（22時）": (22, 00),
+    "6限": (18, 0),
+    "夜（22時）": (22, 0),
 }
 
 ROOM_COLOR = {
@@ -58,13 +52,15 @@ ROOM_COLOR = {
 lock = threading.Lock()
 
 def get_db_connection():
-    # psycopg2.connectに文字列をそのまま渡す（dsnパラメータ名を明示）
     return psycopg2.connect(dsn=DATABASE_URL)
 
-def load_reservations():
+def load_reservations(only_future=False):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT * FROM reservations ORDER BY datetime;")
+    if only_future:
+        cur.execute("SELECT * FROM reservations WHERE datetime >= NOW() ORDER BY datetime;")
+    else:
+        cur.execute("SELECT * FROM reservations ORDER BY datetime;")
     reservations = cur.fetchall()
     cur.close()
     conn.close()
@@ -117,7 +113,6 @@ def check_and_notify():
                             f"日時: {r['date']} {r['time_slot']}\n"
                             f"会議名: {r['meeting_name']}")
                         send_discord_notification(DISCORD_WEBHOOK_URL_REMIND, remind)
-                        # 通知済みに更新
                         conn = get_db_connection()
                         cur = conn.cursor()
                         cur.execute("UPDATE reservations SET notified = TRUE WHERE id = %s;", (r["id"],))
@@ -128,7 +123,7 @@ def check_and_notify():
 
 @app.route('/')
 def index():
-    rs = load_reservations()
+    rs = load_reservations(only_future=True)  # 過去は除外
     rooms = list(ROOM_COLOR.keys())
     time_slots = list(TIME_SLOT_TO_TIME.keys())
     return render_template('reserve.html', reservations=rs, rooms=rooms, time_slots=time_slots)
@@ -187,7 +182,7 @@ def calendar_page():
 
 @app.route('/api/reservations')
 def api_reservations():
-    rs = load_reservations()
+    rs = load_reservations()  # カレンダーは全て表示（過去含む）
     events = []
     for r in rs:
         start = r["datetime"]
