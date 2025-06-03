@@ -205,6 +205,5 @@ def api_reservations():
     return jsonify(events)
 
 if __name__ == '__main__':
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         threading.Thread(target=check_and_notify, daemon=True).start()
     app.run(host='0.0.0.0', port=5000, debug=True)
