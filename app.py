@@ -119,7 +119,7 @@ def check_and_notify():
                         conn.commit()
                         cur.close()
                         conn.close()
-        time.sleep(60)
+        time.sleep(10)
 
 @app.route('/')
 def index():
